@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Interativo de Genética Mendeliana e Padrões de Herança</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .option-btn { transition: all 0.2s ease; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-indigo-600 text-white shadow-md py-4 px-6 mb-6">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">Simulado de Genética Mendeliana</h1>
+            <span id="progress-indicator" class="text-sm bg-indigo-700 px-3 py-1 rounded-full">Questão 1 de 20</span>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 w-full mb-12">
+        <!-- Tela Inicial -->
+        <div id="start-screen" class="bg-white rounded-xl shadow-lg p-8 text-center">
+            <h2 class="text-2xl font-bold mb-4 text-indigo-700">Avaliação Completa de Genética</h2>
+            <p class="mb-6 text-slate-600">Este simulado contém 20 questões cobrindo 100% do seu resumo (Leis de Mendel, Interações Gênicas, Pleiotropia, Epistasia, Heredogramas e Glossário). Obtenha feedback imediato a cada resposta!</p>
+            <button onclick="startQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-lg shadow transition transform hover:-translate-y-0.5">Iniciar Prova</button>
+        </div>
+
+        <!-- Tela do Quiz -->
+        <div id="quiz-screen" class="hidden bg-white rounded-xl shadow-lg p-6 sm:p-8">
+            <div class="flex justify-between items-center mb-4">
+                <span id="question-difficulty" class="text-xs font-semibold uppercase px-2.5 py-1 rounded"></span>
+                <span id="question-tag" class="text-xs text-slate-500 font-medium"></span>
+            </div>
+            
+            <h3 id="question-text" class="text-lg sm:text-xl font-semibold mb-6 text-slate-900"></h3>
+
+            <div id="options-container" class="space-y-3 mb-6">
+                <!-- As alternativas serão inseridas aqui via JavaScript -->
+            </div>
+
+            <div id="feedback-container" class="hidden mb-6 p-4 rounded-lg border text-sm sm:text-base">
+                <!-- Feedback instantâneo -->
+            </div>
+
+            <div class="flex justify-end">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2.5 rounded-lg shadow transition">Próxima Questão</button>
+            </div>
+        </div>
+
+        <!-- Tela de Resultados -->
+        <div id="result-screen" class="hidden bg-white rounded-xl shadow-lg p-8 text-center">
+            <h2 class="text-2xl font-bold mb-4 text-indigo-700">Simulado Concluído!</h2>
+            <p id="final-score" class="text-xl font-semibold mb-6 text-slate-700"></p>
+            <button onclick="restartQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-lg shadow transition">Refazer Simulado</button>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t py-4 text-center text-xs text-slate-500">
+        Gerado com base no Manual Acadêmico de Genética Mendeliana e Padrões de Herança.
+    </footer>
+
+    <script>
+        const quizData = [
+            {
+                difficulty: "Fácil",
+                tag: "Introdução e 1ª Lei",
+                question: "Qual foi a principal contribuição de Gregor Mendel para derrubar a antiga teoria da mistura na hereditariedade?",
+                options: [
+                    { text: "A proposição da herança particulada, demonstrando que os traços são controlados por unidades discretas e inalteráveis (genes).", isCorrect: true, rationale: "Correto! Mendel provou que as características são herdadas por meio de partículas discretas (genes) que não se fundem." },
+                    { text: "A demonstração de que líquidos biológicos se misturam permanentemente no sangue dos descendentes.", isCorrect: false, rationale: "Isso descreve a antiga teoria da mistura, que foi refutada por Mendel." },
+                    { text: "A descoberta de que o citoplasma do óvulo é o único responsável pela transmissão de traços físicos.", isCorrect: false, rationale: "O citoplasma é responsável pela herança mitocondrial, não pelas descobertas mendelianas clássicas de traços nucleares." },
+                    { text: "A criação do conceito de herança holândrica restrita ao cromossomo Y.", isCorrect: false, rationale: "A herança holândrica refere-se a genes no cromossomo Y e não foi o foco principal das leis de Mendel." },
+                    { text: "A formulação da teoria de que os gametas carregam proteínas puras inalteráveis.", isCorrect: false, rationale: "Mendel trabalhou com unidades hereditárias (fatores/alelos), e não com o conceito bioquímico moderno de proteínas puras." }
+                ],
+                hint: "Pense em como Mendel denominou as unidades responsáveis pela transmissão dos caracteres."
+            },
+            {
+                difficulty: "Fácil",
+                tag: "1ª Lei de Mendel",
+                question: "O que estabelece especificamente a 1ª Lei de Mendel, também conhecida como Lei da Segregação Igual?",
+                options: [
+                    { text: "A segregação independente de genes situados em cromossomos homólogos.", isCorrect: false, rationale: "Isso descreve a 2ª Lei de Mendel, e não a 1ª." },
+                    { text: "A separação igual, em proporção de 50%, dos dois membros de um par de alelos durante a formação dos gametas.", isCorrect: true, rationale: "Correto! Cada gameta carrega apenas um alelo de cada par, separando-se igualmente." },
+                    { text: "A fusão de fatores hereditários no zigoto para formar uma característica intermediária.", isCorrect: false, rationale: "Isso se assemelha à dominância incompleta ou à teoria da mistura, oposta à segregação mendeliana." },
+                    { text: "A transmissão exclusiva de caracteres genéticos através do cromossomo X.", isCorrect: false, rationale: "Refere-se à herança ligada ao sexo, e não à segregação autossômica básica da 1ª lei." },
+                    { text: "A mutação espontânea de alelos recessivos em dominantes durante a meiose.", isCorrect: false, rationale: "A segregação refere-se à separação de alelos existentes, e não a taxas de mutação." }
+                ],
+                hint: "Lembre-se da proporção de 50% na distribuição dos alelos para os gametas."
+            },
+            {
+                difficulty: "Fácil",
+                tag: "Divisão Celular",
+                question: "Qual é a principal função genética da mitose nas células somáticas (2n)?",
+                options: [
+                    { text: "Produzir quatro células filhas haploides (n) para a formação de gametas.", isCorrect: false, rationale: "Esta é a função da meiose, que gera células haploides a partir de meiócitos." },
+                    { text: "Manutenção estrita do genótipo e da ploidia nas divisões celulares corporais.", isCorrect: true, rationale: "Correto! A mitose é uma divisão equacional que mantém a constante ploidia (2n -> 2n)." },
+                    { text: "Promover a segregação independente de alelos não homólogos.", isCorrect: false, rationale: "A segregação independente ocorre durante a meiose." },
+                    { text: "Garantir a transmissão de características restritas exclusivamente ao cromossomo Y.", isCorrect: false, rationale: "A transmissão cromossômica sexual ocorre por meio da meiose na gametogênese." },
+                    { text: "Reduzir o número cromossômico pela metade para permitir a fertilização.", isCorrect: false, rationale: "A redução cromossômica pela metade é característica exclusiva da meiose." }
+                ],
+                hint: "Pense no papel da mitose no crescimento e regeneração de tecidos corporais."
+            },
+            {
+                difficulty: "Médio",
+                tag: "Divisão Celular",
+                question: "Em relação à meiose, assinale a alternativa correta sobre sua importância e características celulares:",
+                options: [
+                    { text: "Ocorre em células somáticas para garantir a substituição de tecidos sem alteração genética.", isCorrect: false, rationale: "A divisão que ocorre em células somáticas para substituição de tecidos é a mitose." },
+                    { text: "Tem como célula de origem um meiócito (2n) e resulta em quatro células filhas haploides (n).", isCorrect: true, rationale: "Correto! A meiose é uma divisão reducional que serve de base celular para a segregação igual dos alelos." },
+                    { text: "Mantém a ploidia constante (2n) gerando duas células filhas idênticas.", isCorrect: false, rationale: "Isso descreve fielmente o processo mitótico." },
+                    { text: "Promove a duplicação direta do citoplasma sem divisão do material nuclear.", isCorrect: false, rationale: "A meiose envolve rigorosa divisão nuclear em duas etapas (meIose I e II)." },
+                    { text: "Impede a recombinação de genes localizados em cromossomos não homólogos.", isCorrect: false, rationale: "Pelo contrário, a meiose permite a segregação independente de genes em cromossomos não homólogos." }
+                ],
+                hint: "Lembre-se da conversão de células diploides em haploides."
+            },
+            {
+                difficulty: "Médio",
+                tag: "Interações Gênicas",
+                question: "Na dominância incompleta, qual é o padrão fenotípico típico observado na geração de heterozigotos e sua proporção em $F_2$?",
+                options: [
+                    { text: "O alelo dominante mascara totalmente o recessivo, gerando proporção fenotípica clássica de 3:1.", isCorrect: false, rationale: "Esta proporção e descrição pertencem à dominância completa." },
+                    { text: "Ambos os alelos expressam-se simultaneamente sem mistura, como no sistema ABO.", isCorrect: false, rationale: "Isso define a codominância, onde não há fenótipo intermediário." },
+                    { text: "O heterozigoto exibe um fenótipo intermediário, resultando em proporção genotípica e fenotípica de 1:2:1 em $F_2$.", isCorrect: true, rationale: "Correto! Exemplo clássico de flores vermelhas cruzadas com brancas gerando flores rosas." },
+                    { text: "A morte ocorre em homozigose, alterando a proporção para 2:1.", isCorrect: false, rationale: "Esta alteração de proporção é característica de alelos letais." },
+                    { text: "Um gene mascara a expressão de outro em lócus diferente na proporção de 9:3:4.", isCorrect: false, rationale: "Esta proporção refere-se à epistasia recessiva." }
+                ],
+                hint: "Pense no exemplo clássico de flores onde vermelho + branco gera rosa."
+            },
+            {
+                difficulty: "Fácil",
+                tag: "Interações Gênicas",
+                question: "No sistema sanguíneo ABO, a relação entre os alelos $I^A$ e $I^B$ no indivíduo heterozigoto ilustra qual conceito?",
+                options: [
+                    { text: "Dominância completa", isCorrect: false, rationale: "Na dominância completa, um alelo anula o outro, o que não ocorre aqui." },
+                    { text: "Dominância incompleta", isCorrect: false, rationale: "A dominância incompleta gera fenótipo intermediário, e não a expressão simultânea de ambos." },
+                    { text: "Codominância", isCorrect: true, rationale: "Correto! Ambos os alelos expressam integralmente seus fenótipos no heterozigoto ($AB$)." },
+                    { text: "Epistasia recessiva", isCorrect: false, rationale: "A epistasia envolve a interação entre dois locos gênicos distintos." },
+                    { text: "Pleiotropia", isCorrect: false, rationale: "Pleiotropia ocorre quando um único gene afeta múltiplas características fenotípicas." }
+                ],
+                hint: "Os dois alelos conseguem manifestar suas propriedades ao mesmo tempo no sangue do indivíduo."
+            },
+            {
+                difficulty: "Difícil",
+                tag: "Alelos Letais",
+                question: "Como os alelos letais (que frequentemente causam a morte do organismo em homozigose) afetam as proporções observáveis clássicas em cruzamentos de heterozigotos viáveis?",
+                options: [
+                    { text: "Altered as proporções fenotípicas de $F_2$ para a razão de 2:1 em zigotos viáveis.", isCorrect: true, rationale: "Correto! A morte dos homozigotos letais elimina uma classe da progênie, alterando a proporção esperada." },
+                    { text: "Mantêm rigorosamente a proporção mendeliana de 3:1.", isCorrect: false, rationale: "A morte dos homozigotos impede que a proporção 3:1 seja mantida na prole adulta." },
+                    { text: "Modificam a proporção para 12:3:1 devido à supressão epistática.", isCorrect: false, rationale: "A razão 12:3:1 é típica da epistasia dominante." },
+                    { text: "Resultam em uma proporção de 9:3:4 por ação de genes complementares.", isCorrect: false, rationale: "A razão 9:3:4 refere-se à epistasia recessiva." },
+                    { text: "Provocam o surgimento exclusivo de fenótipos intermediários em 1:2:1.", isCorrect: false, rationale: "Fenótipos intermediários decorrem da dominância incompleta." }
+                ],
+                hint: "Pense no que acontece com os indivíduos que herdam o par letal."
+            },
+            {
+                difficulty: "Médio",
+                tag: "Pleiotropia",
+                question: "Assinale a alternativa que define corretamente o fenômeno da pleiotropia:",
+                options: [
+                    { text: "Um único gene afeta múltiplas características fenotípicas aparentemente não relacionadas.", isCorrect: true, rationale: "Correto! A pleiotropia ocorre quando um gene influi em diversos traços fenotípicos (ex: alelo do gato Manx)." },
+                    { text: "Vários genes combinam-se para determinar uma única característica quantitativa.", isCorrect: false, rationale: "Isso define a herança poligênica ou quantitativa." },
+                    { text: "A expressão de um gene mascara totalmente a manifestação de outro em lócus diferente.", isCorrect: false, rationale: "Esta definição descreve o fenômeno da epistasia." },
+                    { text: "A porcentagem de indivíduos que manifestam o genótipo associado ao fenótipo.", isCorrect: false, rationale: "Isso corresponde ao conceito de penetrância." },
+                    { text: "A variação na intensidade com que o genótipo é expressado entre os indivíduos.", isCorrect: false, rationale: "Isso define expressividade." }
+                ],
+                hint: "Lembre-se de um único fator genético desencadeando efeitos em várias partes do corpo."
+            },
+            {
+                difficulty: "Difícil",
+                tag: "Epistasia",
+                question: "Qual é a proporção fenotípica clássica associada à ocorrência de epistasia recessiva em cruzamentos di-híbridos ($F_2$)?",
+                options: [
+                    { text: "12:3:1", isCorrect: false, rationale: "A proporção 12:3:1 é característica da epistasia dominante." },
+                    { text: "9:3:4", isCorrect: true, rationale: "Correto! Na epistasia recessiva, a presença de um par recessivo em homozigose em um lócus mascara o outro gene, gerando 9:3:4." },
+                    { text: "9:3:3:1", isCorrect: false, rationale: "9:3:3:1 é a proporção padrão da segregação independente para dois genes sem interação epistática." },
+                    { text: "2:1", isCorrect: false, rationale: "A proporção 2:1 está associada a alelos letais." },
+                    { text: "1:2:1", isCorrect: false, rationale: "A proporção 1:2:1 surge na dominância incompleta ou cruzamento monogênico." }
+                ],
+                hint: "Lembre-se das proporções modificadas para interações epistáticas recessivas."
+            },
+            {
+                difficulty: "Médio",
+                tag: "Penetrância e Expressividade",
+                question: "Qual é a principal diferença conceitual entre penetrância e expressividade na genética médica e de populações?",
+                options: [
+                    { text: "A penetrância mede a proporção de indivíduos com o genótipo que manifestam o fenótipo; a expressividade mede o grau ou variação da intensidade dessa manifestação.", isCorrect: true, rationale: "Correto! Penetrância é qualitativa (sim/não), enquanto expressividade é quantitativa (o grau de intensidade)." },
+                    { text: "A penetrância refere-se apenas a genes ligados ao cromossomo Y, e a expressividade a genes autossômicos.", isCorrect: false, rationale: "Ambos os conceitos aplicam-se a diferentes tipos de herança genética, não se restringindo ao cromossomo Y." },
+                    { text: "A penetrância descreve a letalidade em homozigose, e a expressividade descreve a codominância sanguínea.", isCorrect: false, rationale: "Conceitos incorretos; letalidade e codominância tratam de interações alélicas específicas." },
+                    { text: "A penetrância ocorre apenas na mitose, e a expressividade ocorre exclusivamente na meiose.", isCorrect: false, rationale: "Tratam-se de conceitos fenotípicos de expressão gênica, independentes do tipo de divisão celular." },
+                    { text: "Não há diferença; ambos os termos são sinônimos perfeitos na literatura genética.", isCorrect: false, rationale: "São conceitos distintos: um avalia se o traço aparece, o outro com que intensidade ele aparece." }
+                ],
+                hint: "Pense em 'se' o fenótipo aparece versus 'como' (com que intensidade) ele aparece."
+            },
+            {
+                difficulty: "Fácil",
+                tag: "Herança Ligada ao Sexo",
+                question: "Como se caracteriza a herança ligada ao sexo (como o daltonismo e a hemofilia)?",
+                options: [
+                    { text: "Pela transmissão exclusiva de pai para filho via cromossomo Y.", isCorrect: false, rationale: "Isso define a herança restrita ao sexo (holândrica)." },
+                    { text: "Por genes situados na região diferencial do cromossomo X, apresentando proporções distintas entre os sexos.", isCorrect: true, rationale: "Correto! Como os homens possuem apenas um cromossomo X, manifestam mais facilmente alelos recessivos ligados a ele." },
+                    { text: "Pela transmissão exclusivamente materna através do citoplasma do óvulo.", isCorrect: false, rationale: "Isso define a herança mitocondrial." },
+                    { text: "Por genes autossômicos cuja expressão é modificada pelos hormônios sexuais.", isCorrect: false, rationale: "Isso descreve a herança influenciada pelo sexo (ex: calvície)." },
+                    { text: "Pela segregação igual de alelos mitocondriais durante a mitose somática.", isCorrect: false, rationale: "As mitocôndrias seguem herança citoplasmática/materna." }
+                ],
+                hint: "Pense na localização dos genes nos cromossomos sexuais X e Y."
+            },
+            {
+                difficulty: "Médio",
+                tag: "Padrões Complexos",
+                question: "O que define a herança restrita ao sexo (também chamada de holândrica)?",
+                options: [
+                    { text: "A transmissão de traços controlados por genes presentes no cromossomo Y, ocorrendo exclusivamente de pai para filho.", isCorrect: true, rationale: "Correto! Apenas indivíduos do sexo masculino possuem cromossomo Y, garantindo a transmissão direta paterna." },
+                    { text: "A transmissão de características maternas presentes no citoplasma do óvulo.", isCorrect: false, rationale: "Isso caracteriza a herança mitocondrial." },
+                    { text: "Genes autossômicos influenciados pelos níveis de testosterona ou estrógeno.", isCorrect: false, rationale: "Refere-se à herança influenciada pelo sexo." },
+                    { text: "Herança de genes recessivos localizados na região não homóloga do cromossomo X.", isCorrect: false, rationale: "Descreve a herança ligada ao sexo clássica." },
+                    { text: "Distúrbios metabólicos decorrentes de mutações em DNA mitocondrial.", isCorrect: false, rationale: "DNA mitocondrial é herdado via linhagem materna." }
+                ],
+                hint: "Lembre-se de qual cromossomo sexual é exclusivo dos homens."
+            },
+            {
+                difficulty: "Médio",
+                tag: "Padrões Complexos",
+                question: "A calvície é um exemplo clássico de qual padrão de herança, onde os alelos comportam-se de forma diferente dependendo dos hormônios sexuais?",
+                options: [
+                    { text: "Herança ligada ao sexo", isCorrect: false, rationale: "A calvície não está restrita ao cromossomo X; é um traço autossômico." },
+                    { text: "Herança influenciada pelo sexo", isCorrect: true, rationale: "Correto! São genes autossômicos cuja expressão fenotípica muda conforme o ambiente hormonal (ex: dominante em homens, recessivo em mulheres)." },
+                    { text: "Herança restrita ao sexo", isCorrect: false, rationale: "Herança restrita ao sexo ocorre exclusivamente via cromossomo Y." },
+                    { text: "Herança mitocondrial", isCorrect: false, rationale: "Não se transmite exclusivamente pelo citoplasma materno." },
+                    { text: "Pleiotropia estrita", isCorrect: false, rationale: "Pleiotropia envolve um único gene afetando múltiplos traços, o que não esgota a definição hormonal da calvície." }
+                ],
+                hint: "O mesmo genótipo pode se expressar de maneira diferente em homens e mulheres devido aos hormônios."
+            },
+            {
+                difficulty: "Fácil",
+                tag: "Herança Mitocondrial",
+                question: "Como ocorre a transmissão da herança mitocondrial na espécie humana?",
+                options: [
+                    { text: "Exclusivamente paterna, através do DNA presente nos flagelos dos espermatozoides.", isCorrect: false, rationale: "O espermatozoide perde a grande maioria de suas mitocôndrias durante a fecundação." },
+                    { text: "Exclusivamente materna através do citoplasma do óvulo.", isCorrect: true, rationale: "Correto! O óvulo contribui com praticamente todo o citoplasma e organelas para o zigoto." },
+                    { text: "De forma igualitária entre pais e mães através da segregação independente autossômica.", isCorrect: false, rationale: "A herança mitocondrial foge aos padrões nucleares mendelianos." },
+                    { text: "Através do cromossomo Y em transmissão holândrica direta.", isCorrect: false, rationale: "DNA mitocondrial não está localizado no cromossomo Y." },
+                    { text: "Por meio de dominância incompleta nos gametas haploides.", isCorrect: false, rationale: "Não envolve interações de dominância alélica nuclear." }
+                ],
+                hint: "Pense em qual gameta (espermatozoide ou óvulo) fornece o citoplasma para o embrião."
+            },
+            {
+                difficulty: "Fácil",
+                tag: "Glossário Técnico",
+                question: "O que representa o conceito de 'Fenótipo' em genética?",
+                options: [
+                    { text: "A constituição genética completa de um indivíduo para um ou mais genes.", isCorrect: false, rationale: "Isso define o genótipo." },
+                    { text: "As propriedades observáveis de um organismo produzidas pela interação entre o genótipo e o ambiente.", isCorrect: true, rationale: "Correto! O fenótipo é a manifestação visível ou mensurável do organismo." },
+                    { text: "A posição física exata de um gene em um cromossomo homólogo.", isCorrect: false, rationale: "Isso define o lócus gênico." },
+                    { text: "A forma alternativa de um mesmo gene situado no mesmo lócus.", isCorrect: false, rationale: "Isso define o alelo." },
+                    { text: "O diagrama familiar que ilustra o histórico de transmissão biológica.", isCorrect: false, rationale: "Isso define o heredograma." }
+                ],
+                hint: "Pense naquilo que pode ser observado fisicamente ou funcionalmente no indivíduo."
+            },
+            {
+                difficulty: "Fácil",
+                tag: "Glossário Técnico",
+                question: "Como é chamado o organismo que apresenta dois alelos idênticos para um determinado gene (ex: $AA$ ou $aa$)?",
+                options: [
+                    { text: "Heterozigoto", isCorrect: false, rationale: "Heterozigoto possui alelos diferentes (ex: $Aa$)." },
+                    { text: "Homozigoto", isCorrect: true, rationale: "Correto! Organismos homozigotos possuem alelos idênticos no lócus." },
+                    { text: "Meiócito", isCorrect: false, rationale: "Meiócito é a célula de origem diploide que sofre meiose." },
+                    { text: "Zigoto", isCorrect: false, rationale: "Zigoto é a célula resultante da fertilização." },
+                    { text: "Autossomo", isCorrect: false, rationale: "Autossomo é qualquer cromossomo não sexual." }
+                ],
+                hint: "O prefixo 'homo' indica igualdade."
+            },
+            {
+                difficulty: "Médio",
+                tag: "Glossário Técnico",
+                question: "Qual termo técnico designa a posição física e específica ocupada por um gene na estrutura de um cromossomo?",
+                options: [
+                    { text: "Alelo", isCorrect: false, rationale: "Alelo é a forma alternativa do gene, e não sua localização." },
+                    { text: "Lócus gênico", isCorrect: true, rationale: "Correto! O lócus é o endereço físico do gene no cromossomo." },
+                    { text: "Heredograma", isCorrect: false, rationale: "Heredograma é a árvore genealógica utilizada para rastrear traços." },
+                    { text: "Autossomo", isCorrect: false, rationale: "Autossomo refere-se a cromossomos não sexuais em geral." },
+                    { text: "Zigoto", isCorrect: false, rationale: "Zigoto é a célula ovo formada na fecundação." }
+                ],
+                hint: "Pense no 'endereço' ou lugar onde o gene reside no cromossomo."
+            },
+            {
+                difficulty: "Médio",
+                tag: "Glossário Técnico",
+                question: "O que caracteriza um organismo classificado como heterozigoto?",
+                options: [
+                    { text: "Apresenta dois alelos idênticos para um determinado gene (ex: $AA$).", isCorrect: false, rationale: "Isso define o homozigoto." },
+                    { text: "Possui dois alelos diferentes em um determinado lócus (ex: $Aa$).", isCorrect: true, rationale: "Correto! O heterozigoto carrega alelos distintos em cromossomos homólogos." },
+                    { text: "Possui apenas um conjunto cromossômico haploide ($n$).", isCorrect: false, rationale: "Isso descreve células gaméticas ou organismos haploides." },
+                    { text: "Contém cromossomos sexuais restritos exclusivamente ao pai.", isCorrect: false, rationale: "Refere-se à herança holândrica." },
+                    { text: "Sofre divisão equacional mitótica permanente.", isCorrect: false, rationale: "Descreve a dinâmica de células somáticas." }
+                ],
+                hint: "O prefixo 'hetero' indica diferença entre os alelos."
+            },
+            {
+                difficulty: "Fácil",
+                tag: "Glossário Técnico",
+                question: "Qual é a definição de 'Heredograma' na análise genética?",
+                options: [
+                    { text: "Um diagrama familiar que ilustra o histórico e a transmissão de traços biológicos ao longo das gerações.", isCorrect: true, rationale: "Correto! O heredograma (ou árvore genealógica) mapeia fenótipos e parentescos." },
+                    { text: "A constituição cromossômica completa de uma espécie em metáfase.", isCorrect: false, rationale: "Isso define o cariótipo." },
+                    { text: "A proporção estatística de indivíduos afetados em cruzamentos de $F_2$.", isCorrect: false, rationale: "Refere-se a cálculos de proporções fenotípicas mendelianas." },
+                    { text: "A tabela de enzimas envolvidas na via de pigmentação celular.", isCorrect: false, rationale: "Trata-se de vias metabólicas bioquímicas." },
+                    { text: "O conjunto de mitocôndrias herdadas via citoplasma materno.", isCorrect: false, rationale: "Refere-se ao material genético citoplasmático." }
+                ],
+                hint: "Pense em uma árvore genealógica usada por geneticistas."
+            },
+            {
+                difficulty: "Médio",
+                tag: "Glossário Técnico",
+                question: "O que é um 'Autossomo'?",
+                options: [
+                    { text: "Qualquer cromossomo sexual pertencente ao cariótipo da espécie (X ou Y).", isCorrect: false, rationale: "Cromossomos X e Y são gonossomos (cromossomos sexuais), e não autossomos." },
+                    { text: "Qualquer cromossomo não sexual pertencente ao cariótipo da espécie.", isCorrect: true, rationale: "Correto! Autossomos são os cromossomos que não determinam o sexo biológico." },
+                    { text: "Uma organela citoplasmática responsável pela herança materna.", isCorrect: false, rationale: "Refere-se à mitocôndria." },
+                    { text: "A unidade básica de herança particulada descoberta por Mendel.", isCorrect: false, rationale: "Isso define o gene." },
+                    { text: "A célula diploide resultante da fertilização de gametas.", isCorrect: false, rationale: "Isso define o zigoto." }
+                ],
+                hint: "São os cromossomos que formam o restante do cariótipo, excluindo os sexuais."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const nextBtn = document.getElementById('next-btn');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const questionDifficulty = document.getElementById('question-difficulty');
+        const questionTag = document.getElementById('question-tag');
+        const finalScore = document.getElementById('final-score');
+
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            feedbackContainer.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            
+            const q = quizData[currentQuestionIndex];
+            progressIndicator.textContent = `Questão ${currentQuestionIndex + 1} de ${quizData.length}`;
+            questionDifficulty.textContent = q.difficulty;
+            
+            // Cores de dificuldade
+            if (q.difficulty === 'Fácil') questionDifficulty.className = 'text-xs font-semibold uppercase px-2.5 py-1 rounded bg-emerald-100 text-emerald-800';
+            else if (q.difficulty === 'Médio') questionDifficulty.className = 'text-xs font-semibold uppercase px-2.5 py-1 rounded bg-amber-100 text-amber-800';
+            else questionDifficulty.className = 'text-xs font-semibold uppercase px-2.5 py-1 rounded bg-rose-100 text-rose-800';
+
+            questionTag.textContent = q.tag;
+            questionText.innerHTML = q.question;
+
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const letter = String.fromCharCode(65 + index); // A, B, C, D, E
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-left p-4 rounded-lg border border-slate-200 hover:bg-slate-100 font-medium text-slate-700 flex items-start space-x-3';
+                btn.innerHTML = `<span class="font-bold text-indigo-600">${letter})</span> <span class="flex-1">${opt.text}</span>`;
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            if (window.MathJax) {
+                MathJax.typeset();
+            }
+        }
+
+        function selectOption(selectedIndex, selectedBtn) {
+            if (answered) return;
+            answered = true;
+
+            const q = quizData[currentQuestionIndex];
+            const buttons = optionsContainer.getElementsByTagName('button');
+
+            q.options.forEach((opt, index) => {
+                buttons[index].disabled = true;
+                if (opt.isCorrect) {
+                    buttons[index].classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+                } else if (index === selectedIndex) {
+                    buttons[index].classList.add('bg-rose-50', 'border-rose-500', 'text-rose-900');
+                }
+            });
+
+            if (q.options[selectedIndex].isCorrect) {
+                score++;
+                feedbackContainer.className = 'mb-6 p-4 rounded-lg border bg-emerald-50 border-emerald-200 text-emerald-900';
+                feedbackContainer.innerHTML = `<strong>Resposta Correta!</strong> ${q.options[selectedIndex].rationale}`;
+            } else {
+                feedbackContainer.className = 'mb-6 p-4 rounded-lg border bg-rose-50 border-rose-200 text-rose-900';
+                feedbackContainer.innerHTML = `<strong>Resposta Incorreta.</strong> ${q.options[selectedIndex].rationale}`;
+            }
+
+            feedbackContainer.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+
+            if (window.MathJax) {
+                MathJax.typeset();
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                quizScreen.classList.add('hidden');
+                resultScreen.classList.remove('hidden');
+                finalScore.textContent = `Você acertou ${score} de ${quizData.length} questões (${Math.round((score/quizData.length)*100)}% de aproveitamento).`;
+            }
+        }
+
+        function restartQuiz() {
+            resultScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
+```eof
+
+### Resumo do Aplicativo Gerado:
+* **20 Questões Completas**: Abrangendo desde a Introdução e Leis de Mendel, divisões celulares (Mitose/Meiose), interações gênicas (dominância incompleta, codominância, alelos letais, pleiotropia, epistasia, penetrância e expressividade), padrões complexos (herança ligada, restrita e influenciada pelo sexo, além da herança mitocondrial) até o glossário técnico completo.
+* **Alternativas de A até E**: Cada questão possui 5 alternativas estruturadas com rigor pedagógico.
+* **Interatividade Instantânea**: Ao clicar em uma alternativa, o sistema valida sua resposta na mesma hora, exibe o gabarito detalhado em cor destacada e libera o botão para avançar.
+
+Basta abrir o arquivo gerado em qualquer navegador web para começar a praticar e testar seus conhecimentos! Bons estudos e excelente simulado!
